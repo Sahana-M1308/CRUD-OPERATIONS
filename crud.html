@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Management App - CRUD</title>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; }
+        .container { display: flex; gap: 20px; }
+        .form-section { flex: 1; }
+        .list-section { flex: 2; }
+        form div { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; }
+        input, select, textarea { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { padding: 10px 15px; cursor: pointer; margin-top: 10px; }
+        .task-list { list-style: none; padding: 0; }
+        .task-item { border: 1px solid #ccc; padding: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .task-item.completed { text-decoration: line-through; background-color: #f0f0f0; }
+        .task-details { flex-grow: 1; }
+        .task-actions button { margin-left: 5px; margin-top: 0; }
+        .badge-high { color: red; font-weight: bold; }
+        .badge-medium { color: orange; }
+        .badge-low { color: green; }
+    </style>
+</head>
+<body>
+
+    <h1>Task Manager</h1>
+
+    <div class="container">
+        <!-- 1.1. Create Tasks Form -->
+        <div class="form-section">
+            <h2>Add New Task</h2>
+            <form id="taskForm">
+                <div>
+                    <label for="title">Title (Required):</label>
+                    <input type="text" id="title" required>
+                </div>
+                <div>
+                    <label for="description">Description:</label>
+                    <textarea id="description" rows="3"></textarea>
+                </div>
+                <div>
+                    <label for="priority">Priority:</label>
+                    <select id="priority">
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="dueDate">Due Date:</label>
+                    <input type="date" id="dueDate">
+                </div>
+                <button type="submit">Add Task</button>
+            </form>
+        </div>
+
+        <!-- 1.2. Read/Display Tasks List -->
+        <div class="list-section">
+            <h2>Pending Tasks</h2>
+            <ul id="taskList" class="task-list">
+                <!-- Tasks will be rendered here by JavaScript -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- 1.3. Edit Modal (Simple inline implementation shown in JS logic) -->
+
+    <script>
+        let tasks = [];
+
+        const taskForm = document.getElementById('taskForm');
+        const taskList = document.getElementById('taskList');
+
+        // Helper function to generate unique IDs
+        const generateId = () => Date.now().toString();
+
+        // 1.1. Create Task Logic
+        taskForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const description = document.getElementById('description').value;
+            const priority = document.getElementById('priority').value;
+            const dueDate = document.getElementById('dueDate').value;
+
+            // 1.1. Validate required fields (HTML 'required' attribute handles basic validation, but this adds clarity)
+            if (!title) {
+                alert('Title is required.');
+                return;
+            }
+
+            const newTask = {
+                id: generateId(),
+                title,
+                description,
+                priority,
+                dueDate,
+                status: 'pending' // 'pending' or 'completed'
+            };
+
+            tasks.push(newTask);
+            renderTasks();
+
+            // 1.1. Clear form after submission
+            taskForm.reset();
+        });
+
+        // 1.2. Read/Display Tasks Logic
+        function renderTasks() {
+            taskList.innerHTML = ''; // Clear current list
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.classList.add('task-item', task.status);
+                li.dataset.id = task.id;
+
+                const priorityClass = `badge-${task.priority}`;
+
+                li.innerHTML = `
+                    <div class="task-details">
+                        <strong>${task.title}</strong>
+                        <p>${task.description || 'No description'}</p>
+                        <span class="${priorityClass}">Priority: ${task.priority}</span> |
+                        <span>Due: ${task.dueDate || 'N/A'}</span> |
+                        <span>Status: ${task.status}</span>
+                    </div>
+                    <div class="task-actions">
+                        <button onclick="toggleComplete('${task.id}')">${task.status === 'pending' ? 'Mark Complete' : 'Mark Pending'}</button>
+                        <button onclick="editTaskInline('${task.id}')">Edit</button>
+                        <button onclick="deleteTask('${task.id}')">Delete</button>
+                    </div>
+                `;
+
+                taskList.appendChild(li);
+            });
+        }
+
+        // 1.3. Update (Toggle Status) Logic
+        function toggleComplete(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.status = task.status === 'pending' ? 'completed' : 'pending';
+                renderTasks();
+            }
+        }
+
+        // 1.3. Update (Edit Inline) Logic - Simple implementation
+        function editTaskInline(id) {
+            const task = tasks.find(t => t.id === id);
+            if (!task) return;
+
+            // In a real app, you might use a modal or replace the LI content with form fields.
+            // For simplicity here, we'll prompt and update:
+            const newTitle = prompt('Enter new title:', task.title);
+            if (newTitle && newTitle.trim() !== '') {
+                task.title = newTitle.trim();
+                // We could also prompt for other fields...
+                renderTasks();
+            }
+        }
+
+        // 1.3. Delete Task Logic
+        function deleteTask(id) {
+            // Delete with confirmation
+            if (confirm('Are you sure you want to delete this task?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                renderTasks();
+            }
+        }
+
+        // Initial render (list starts empty)
+        renderTasks();
+
+    </script>
+</body>
+</html>
